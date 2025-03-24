@@ -1,38 +1,32 @@
 # Étape de construction
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 
-# Copier uniquement les fichiers nécessaires pour installer les dépendances
+# Copier les fichiers de dépendances et installer
 COPY package.json package-lock.json* ./
-
-# Installer les dépendances en respectant le package-lock.json
 RUN npm ci --legacy-peer-deps
 
-# Copier le reste des fichiers source
+# Copier le reste des fichiers et construire l'application
 COPY . .
-
-# Construire l'application en mode production
 RUN npm run build
 
-# Étape de production - image plus légère
+# Étape de production
 FROM node:18-alpine AS runner
-
 WORKDIR /app
 
 # Définir les variables d'environnement
 ENV NODE_ENV=production
 ENV PORT=3456
+ENV JWT_SECRET=VotreSecretIci  # Définissez votre secret ici ou via docker run -e
 
-# Copier les fichiers nécessaires depuis l'étape de construction
+# Copier les fichiers nécessaires
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
-# La ligne suivante a été supprimée car le dossier standalone n'existe pas
-# COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# On ne copie pas le dossier standalone car il n'existe pas
+COPY --from=builder /app/.next ./.next
 
 # Exposer le port configuré
 EXPOSE 3456
 
-# Commande de démarrage
-CMD ["node", "server.js"]
+# Utiliser la commande par défaut de Next.js pour démarrer le serveur
+CMD ["npx", "next", "start", "-p", "3456"]
