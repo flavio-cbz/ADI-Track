@@ -6,8 +6,8 @@ WORKDIR /app
 # Copier uniquement les fichiers nécessaires pour installer les dépendances
 COPY package.json package-lock.json* ./
 
-# Installer les dépendances avec CI pour respecter le package-lock.json
-RUN npm ci
+# Installer les dépendances en respectant le package-lock.json
+RUN npm ci --legacy-peer-deps
 
 # Copier le reste des fichiers source
 COPY . .
@@ -24,10 +24,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3456
 
-# Copier uniquement les fichiers nécessaires depuis l'étape de construction
+# Copier les fichiers nécessaires depuis l'étape de construction
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
+# La ligne suivante a été supprimée car le dossier standalone n'existe pas
+# COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Exposer le port configuré
@@ -35,4 +36,3 @@ EXPOSE 3456
 
 # Commande de démarrage
 CMD ["node", "server.js"]
-
