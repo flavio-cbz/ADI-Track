@@ -1,32 +1,24 @@
-# Étape de construction
-FROM node:18-alpine AS builder
+# Use Node.js LTS version
+FROM node:18-alpine
+
+# Set working directory
 WORKDIR /app
 
-# Copier les fichiers de dépendances et installer
-COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+# Copy package files
+COPY package.json package-lock.json ./
 
-# Copier le reste des fichiers et construire l'application
+# Install dependencies
+RUN npm ci
+
+# Copy all project files
 COPY . .
+
+# Build the Next.js application
 RUN npm run build
 
-# Étape de production
-FROM node:18-alpine AS runner
-WORKDIR /app
+# Expose the port the app will run on
+EXPOSE 3000
 
-# Définir les variables d'environnement
-ENV NODE_ENV=production
-ENV PORT=3456
-ENV JWT_SECRET=VotreSecretIci  # Définissez votre secret ici ou via docker run -e
+# Start the application
+CMD ["npm", "start"]
 
-# Copier les fichiers nécessaires
-COPY --from=builder /app/next.config.mjs ./
-COPY --from=builder /app/public ./public
-# On ne copie pas le dossier standalone car il n'existe pas
-COPY --from=builder /app/.next ./.next
-
-# Exposer le port configuré
-EXPOSE 3456
-
-# Utiliser la commande par défaut de Next.js pour démarrer le serveur
-CMD ["npx", "next", "start", "-p", "3456"]

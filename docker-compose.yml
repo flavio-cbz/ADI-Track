@@ -1,18 +1,16 @@
 services:
   aditrack:
-    container_name : Adi-Track
+    container_name: ADITrack
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "3456:3456"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=3456
       - JWT_SECRET=${JWT_SECRET}
     volumes:
-      - /opt/aditrack:/app/data
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3456/api/health"]
       interval: 30s
